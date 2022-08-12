@@ -1,28 +1,18 @@
-from turtle import st
-from PIL import Image
+import os
+from skimage import io, exposure, img_as_ubyte
 from torchvision import transforms
-import numpy as np
 
-def read_im(filename: str):
-    return Image.open(filename)
-
-def im_to_tensor(im):
-    return transforms.ToTensor()(im)
-
-## TO DO: Adapt the code below to your framework
-m, s = np.mean(input_image, axis=(0, 1)), np.std(input_image, axis=(0, 1))
-preprocess = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize(mean=m, std=s),
-])
-input_tensor = preprocess(input_image)
-input_batch = input_tensor.unsqueeze(0)
-
-if torch.cuda.is_available():
-    input_batch = input_batch.to('cuda')
-    model = model.to('cuda')
-
-with torch.no_grad():
-    output = model(input_batch)
-
-print(torch.round(output[0]))
+def im_to_tensor(base_path: str, filename: str):
+    """ Read a TIF image and return a tensor
+    
+    Args:
+        base_path:
+        filename: 
+    
+    Returns:
+        Tensor: Torch tensor containing the image as uin.
+    """
+    im = io.imread(os.path.join(base_path, filename))
+    im = img_as_ubyte(exposure.rescale_intensity(im))
+    im = transforms.ToTensor()(im)
+    return im
