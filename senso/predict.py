@@ -1,16 +1,18 @@
 import torch
 import os
 from senso.model import UNet
-from senso.utils import read_im
+from senso.utils import im_to_tensor
+
 
 def predict(path_model, base_path, im_filename):
     """Make a prediction using the U-Net."""
-    
+
     # Get cpu or gpu device for training.
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
     # Load image on `device`
-    im = read_im(os.path.join(base_path, im_filename))
+    im = im_to_tensor(os.path.join(base_path, im_filename))
+    im = im.unsqueeze(0)
     im = im.to(device)
 
     # Build the model and load the weights
