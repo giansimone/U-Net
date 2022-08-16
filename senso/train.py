@@ -1,8 +1,94 @@
 import torch
+import os
+from glob import glob
 from torch import nn
+from torch.utils.data import DataLoader, Dataset
+from skimage import io
+from senso.model import UNet
+from senso.utils import im_to_tensor
 
-# Define the loss function
-loss_fn = nn.CrossEntropyLoss()
 
-# Define a stochatic gradiend descent as optimiser
-optimizer = torch.optim.SGD(model.parameters(), lr=1e-4)
+class BacteriaDataset(Dataset):
+    """Dataset to train the U-Net."""
+
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def __len__(self):
+        return len(self.x)
+    
+    def __getitem__(self, idx):
+        # Select the sample
+        input_path = self.x[idx]
+        target_path = self.y[idx]
+
+        # Load input and target
+        x, y = im_to_tensor(input_path).type(torch.float32), torch.from_numpy(io.imread(target_path)).type(torch.int64)
+
+        return x, y
+
+
+def train(model_path, data_path, epochs=10, batch_size=4, learning_rate=1e-4, is_mps=False):
+    """Train function for the U-Net.
+
+    Args:
+        model_path:
+        epochs:
+        bactch_size:
+        learning_rate:
+    """
+
+    # Set fixed random number seed
+    torch.manual_seed(42)
+    
+    # Create model directory
+    if not os.path.exists(model_path):
+        os.makedirs(model_path)
+    
+    # Get cpu or gpu device for training.
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    if is_mps:
+        device = torch.device('mps')
+
+    # Load data
+    inputs = glob(os.path.join(data_path, 'images', '*.tif')) # TO DO: Adjust the code
+    targets = glob(os.path.join(data_path, 'labels', '*.png')) # TO DO: Adjust the code
+    dataset = BacteriaDataset(inputs, targets)
+    data_loader = DataLoader(dataset, batch_size, shuffle=True)
+
+    # Build the model
+    model = UNet().to(device)
+
+    # Define the loss function and optimiser
+    loss_fn = nn.CrossEntropyLoss()
+    optimiser = torch.optim.SGD(model.parameters(), lr=learning_rate)
+
+    for e in range(epochs):
+        print(f'Epoch {e+1}\n-------------------------------')
+        size = len(data_loader.dataset)
+
+        # Train the model
+        model.train()
+        for batch, (X, y) in enumerate(data_loader):
+            # Load inputs and labels on `device`
+            X, y = X.to(device), y.to(device)
+
+            # Compute prediction and loss
+            pred = model(X)
+            loss = loss_fn(pred, y)
+            
+            # Backpropagation
+            optimiser.zero_grad()
+            loss.backward()
+            optimiser.step()
+            
+            current_loss, current = loss.item(), batch * len(X)
+            print(f'loss: {current_loss:>7f}  [{current:>5d}/{size:>5d}]')
+
+        # Save model weights
+        torch.save(model.state_dict(), os.path.join(model_path, 'model_weights.pth'))
+
+
+if __name__ == '__main__':
+    train('./data', './data/examples/cheetah/patches_train/')
