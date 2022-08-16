@@ -37,8 +37,6 @@ class UNet(nn.Module):
            im_weight: Image with in pixels.
            in_ch: Number of input channels.
            out_ch: Number of output channels (i.e., classes).
-        Returns:
-            None
         """
         super(UNet, self).__init__()
         self.encode_A = ConvConv(in_ch, 64)
