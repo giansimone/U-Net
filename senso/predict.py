@@ -8,7 +8,7 @@ def predict(path_model, base_path, im_filename):
     """Make a prediction using the U-Net."""
 
     # Get cpu or gpu device for training.
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     
     # Load image on `device`
     im = im_to_tensor(os.path.join(base_path, im_filename))

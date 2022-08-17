@@ -14,11 +14,11 @@ class ConvConv(nn.Module):
         super(ConvConv, self).__init__()
         self.conv_op = nn.Sequential(
             nn.Conv2d(in_ch, out_ch, kernel_size=3, padding=1, stride=1),
-            nn.ReLU(),
             nn.BatchNorm2d(out_ch),
-            nn.Conv2d(out_ch, out_ch, kernel_size=3, padding=1, stride=1),
             nn.ReLU(),
-            nn.BatchNorm2d(out_ch)
+            nn.Conv2d(out_ch, out_ch, kernel_size=3, padding=1, stride=1),
+            nn.BatchNorm2d(out_ch),
+            nn.ReLU()
         )
     
     def forward(self, x):
@@ -30,7 +30,7 @@ class ConvConv(nn.Module):
 class UNet(nn.Module):
     """Convolutional neuronal network U-Net."""
 
-    def __init__(self, im_height=512, im_weight=512, in_ch=1, out_ch=3) -> None:
+    def __init__(self, im_height=512, im_weight=512, in_ch=1, out_ch=3):
         """
         Args:
            im_height: Image height in pixels.

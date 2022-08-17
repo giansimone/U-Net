@@ -24,12 +24,12 @@ class BacteriaDataset(Dataset):
         target_path = self.y[idx]
 
         # Load input and target
-        x, y = im_to_tensor(input_path).type(torch.float32), torch.from_numpy(io.imread(target_path)).type(torch.int64)
+        x, y = im_to_tensor(input_path).type(torch.float32), torch.from_numpy(io.imread(target_path)).type(torch.long)
 
         return x, y
 
 
-def train(model_path, data_path, epochs=10, batch_size=4, learning_rate=1e-4, is_mps=False):
+def train(model_path, data_path, epochs=10, batch_size=4, learning_rate=1e-4):
     """Train function for the U-Net.
 
     Args:
@@ -47,13 +47,14 @@ def train(model_path, data_path, epochs=10, batch_size=4, learning_rate=1e-4, is
         os.makedirs(model_path)
     
     # Get cpu or gpu device for training.
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    if is_mps:
-        device = torch.device('mps')
+    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    device = torch.device('mps')
 
-    # Load data
-    inputs = glob(os.path.join(data_path, 'images', '*.tif')) # TO DO: Adjust the code
-    targets = glob(os.path.join(data_path, 'labels', '*.png')) # TO DO: Adjust the code
+    # Load data ## TODO: Adjust the code to load a general dataset ## 
+    inputs = glob(os.path.join(data_path, 'images', '*.tif'))
+    inputs.sort()
+    targets = glob(os.path.join(data_path, 'labels', '*.png'))
+    targets.sort()
     dataset = BacteriaDataset(inputs, targets)
     data_loader = DataLoader(dataset, batch_size, shuffle=True)
 
@@ -62,7 +63,8 @@ def train(model_path, data_path, epochs=10, batch_size=4, learning_rate=1e-4, is
 
     # Define the loss function and optimiser
     loss_fn = nn.CrossEntropyLoss()
-    optimiser = torch.optim.SGD(model.parameters(), lr=learning_rate)
+    #optimiser = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    optimiser = torch.optim.RMSprop(model.parameters(), lr=learning_rate)
 
     for e in range(epochs):
         print(f'Epoch {e+1}\n-------------------------------')
