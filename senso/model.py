@@ -30,7 +30,7 @@ class ConvConv(nn.Module):
 class UNet(nn.Module):
     """Convolutional neuronal network U-Net."""
 
-    def __init__(self, im_height=512, im_weight=512, in_ch=1, out_ch=3):
+    def __init__(self, in_ch=1, out_ch=3):
         """
         Args:
            im_height: Image height in pixels.

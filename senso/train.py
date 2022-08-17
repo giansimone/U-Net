@@ -5,7 +5,7 @@ from torch import nn
 from torch.utils.data import DataLoader, Dataset
 from skimage import io
 from senso.model import UNet
-from senso.utils import im_to_tensor
+from senso.utils import im_to_tensor, get_files_list
 
 
 class BacteriaDataset(Dataset):
@@ -50,11 +50,9 @@ def train(model_path, data_path, epochs=10, batch_size=4, learning_rate=1e-4):
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     device = torch.device('mps')
 
-    # Load data ## TODO: Adjust the code to load a general dataset ## 
-    inputs = glob(os.path.join(data_path, 'images', '*.tif'))
-    inputs.sort()
-    targets = glob(os.path.join(data_path, 'labels', '*.png'))
-    targets.sort()
+    # Load data
+    inputs = get_files_list(os.path.join(data_path, 'inputs'), 'tif')
+    targets = get_files_list(os.path.join(data_path, 'targets'), 'png')
     dataset = BacteriaDataset(inputs, targets)
     data_loader = DataLoader(dataset, batch_size, shuffle=True)
 
