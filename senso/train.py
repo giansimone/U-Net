@@ -1,32 +1,9 @@
 import torch
 import os
-from glob import glob
 from torch import nn
-from torch.utils.data import DataLoader, Dataset
-from skimage import io
+from torch.utils.data import DataLoader
 from senso.model import UNet
-from senso.utils import im_to_tensor, get_files_list
-
-
-class BacteriaDataset(Dataset):
-    """Dataset to train the U-Net."""
-
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-
-    def __len__(self):
-        return len(self.x)
-    
-    def __getitem__(self, idx):
-        # Select the sample
-        input_path = self.x[idx]
-        target_path = self.y[idx]
-
-        # Load input and target
-        x, y = im_to_tensor(input_path).type(torch.float32), torch.from_numpy(io.imread(target_path)).type(torch.long)
-
-        return x, y
+from senso import data
 
 
 def train(model_path, data_path, epochs=10, batch_size=4, learning_rate=1e-4):
@@ -51,9 +28,7 @@ def train(model_path, data_path, epochs=10, batch_size=4, learning_rate=1e-4):
     device = torch.device('mps')
 
     # Load data
-    inputs = get_files_list(os.path.join(data_path, 'inputs'), 'tif')
-    targets = get_files_list(os.path.join(data_path, 'targets'), 'png')
-    dataset = BacteriaDataset(inputs, targets)
+    dataset = data.data_set(data_path)
     data_loader = DataLoader(dataset, batch_size, shuffle=True)
 
     # Build the model
