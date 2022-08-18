@@ -24,8 +24,11 @@ def train(model_path, data_path, epochs=10, batch_size=4, learning_rate=1e-4):
         os.makedirs(model_path)
     
     # Get cpu or gpu device for training.
-    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-    device = torch.device('mps')
+    if os.uname().machine == 'arm64':
+        # Training on Metal
+        device = torch.device('mps')
+    else:
+        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
     # Load data
     dataset = data.data_set(data_path)
