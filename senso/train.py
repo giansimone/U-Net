@@ -66,6 +66,8 @@ def train(model_path, data_path, epochs=10, batch_size=4, learning_rate=1e-4):
 
         # Save model weights
         torch.save(model.state_dict(), os.path.join(model_path, 'model_weights.pth'))
+    
+    print(f'Training has been completed.\n-------------------------------')
 
 
 if __name__ == '__main__':
