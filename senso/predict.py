@@ -4,14 +4,23 @@ from senso.model import UNet
 from senso.utils import im_to_tensor
 
 
-def predict(path_model, base_path, im_filename):
-    """Make a prediction using the U-Net."""
+def predict(path_model: str, im_path: str):
+    """Make a prediction using the U-Net.
 
-    # Get cpu or gpu device for training.
-    device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+    Args:
+        path_model: Path to the model weights.
+        im_path: Path to the image.
+    """
+
+    # Get cpu or gpu device for prediction.
+    if os.uname().machine == 'arm64':
+        # Prediction on Metal
+        device = torch.device('mps')
+    else:
+        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     
     # Load image on `device`
-    im = im_to_tensor(os.path.join(base_path, im_filename))
+    im = im_to_tensor(im_path)
     im = im.unsqueeze(0)
     im = im.to(device)
 
@@ -24,7 +33,13 @@ def predict(path_model, base_path, im_filename):
     with torch.no_grad():
         pred = model(im)
     
-    return pred
+    return pred.squeeze(0).detach().cpu().numpy()
 
-if __name__ == '__main__':
-    predict('./data', './data/examples', 'sample.tif')
+
+def mask_from_pred(pred):
+    """Calculate a mask from the prediction.
+    Args:
+        pred: Prediction done for a single image.
+    """
+
+    return pred.argmax(0)
